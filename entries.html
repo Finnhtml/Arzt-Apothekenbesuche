@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gespeicherte Einträge</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #2c2c2c; color: #f5f5f5; padding: 20px;">
+    <h1 style="color: #76c7c0; text-align: center;">Gespeicherte Einträge</h1>
+
+    <ul id="entryList" style="list-style-type: none; padding: 0; max-width: 600px; margin: 0 auto;"></ul>
+
+    <button id="exportExcel" style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;">
+        Als Excel exportieren
+    </button>
+    
+    <button id="backToInput" style="width: 100%; padding: 10px; background-color: #76c7c0; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+        Zurück zur Eingabe
+    </button>
+
+    <button id="clearEntries" style="width: 100%; padding: 10px; background-color: #e41e20; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+        Alle Einträge löschen
+    </button>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        const entries = JSON.parse(localStorage.getItem('entries')) || [];
+
+        function displayEntries() {
+            const entryList = document.getElementById('entryList');
+            entryList.innerHTML = '';
+            entries.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `Start: ${entry.start}, Ziel: ${entry.end}, Datum: ${entry.date}, Kilometer: ${entry.km}`;
+                li.style.backgroundColor = '#3a3a3a';
+                li.style.padding = '10px';
+                li.style.margin = '5px 0';
+                li.style.borderRadius = '5px';
+                entryList.appendChild(li);
+            });
+        }
+
+        displayEntries();
+
+        document.getElementById('exportExcel').addEventListener('click', function() {
+            if (entries.length === 0) {
+                alert('Keine Einträge vorhanden zum Exportieren!');
+                return;
+            }
+
+            const workbook = XLSX.utils.book_new();
+            const worksheetData = [
+                ['Arzt-/Apotheken-Besuche'],
+                ['Jahr:', new Date().getFullYear()],
+                [],
+                ['Datum', 'Startadresse', 'Zieladresse', 'Kilometer'],
+            ];
+
+            entries.forEach(entry => {
+                worksheetData.push([entry.date, entry.start, entry.end, entry.km]);
+            });
+
+            const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+            const colWidths = [{ wch: 15 }, { wch: 30 }, { wch: 30 }, { wch: 12 }];
+            worksheet['!cols'] = colWidths;
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Besuche');
+            XLSX.writeFile(workbook, 'Arzt_Apotheken_Besuche.xlsx');
+        });
+
+        document.getElementById('clearEntries').addEventListener('click', function() {
+            localStorage.removeItem('entries');
+            displayEntries();
+        });
+
+        document.getElementById('backToInput').addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
